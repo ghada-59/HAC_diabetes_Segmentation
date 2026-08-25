@@ -1,0 +1,16 @@
+﻿# Fichiers cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environnements virtuels (si vous en utilisez un)
+venv/
+env/
+.env
+
+# Fichiers système (Mac/Windows)
+.DS_Store
+Thumbs.db
+
+# (Optionnel) Ignorer les données générées si elles sont trop lourdes
+# data/pima_diabetes-segmented.csv
