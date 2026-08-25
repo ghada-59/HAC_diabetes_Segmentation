@@ -1,155 +1,150 @@
-﻿# 🩸 Classification Ascendante Hiérarchique (CAH) - Segmentation des Patients (Dataset Pima)
+﻿﻿# 🩸 Hierarchical Agglomerative Clustering (HAC) - Patient Segmentation (Pima Dataset)
 
-Ce projet applique des techniques d'apprentissage non supervisé (Clustering) pour identifier des **profils types (phénotypes) de patients atteints ou à risque de diabète de type 2** à partir du jeu de données réel **Pima Indians Diabetes** (`pima_diabetes.csv`). 
+This project applies unsupervised learning techniques (Clustering) to identify **typical patient profiles (phenotypes) who have or are at risk of Type 2 diabetes** using the real-world **Pima Indians Diabetes** dataset (`pima_diabetes.csv`).
 
-L'analyse repose sur la **Classification Ascendante Hiérarchique (CAH)** avec le **critère de Ward**, permettant de regrouper les 768 patients selon la similarité de leurs constantes biologiques, sans utiliser la variable cible (`Outcome`) lors de la phase d'apprentissage.
-
----
-
-## 🎯 Objectifs et Contexte Médical
-
-Dans la prise en charge du diabète, deux patients diagnostiqués positifs peuvent présenter des réalités physiologiques très différentes (ex. une personne jeune avec un taux d'insuline élevé vs une personne âgée avec une forte pression artérielle et un IMC élevé).
-
-Les objectifs stratégiques du projet sont :
-1. **Identifier des sous-groupes homogènes de patients** basés uniquement sur leurs caractéristiques cliniques (`Glucose`, `BMI`, `Insulin`, `Age`, `BloodPressure`, etc.).
-2. **Nettoyer et préparer les données médicales** en traitant les valeurs aberrantes (ex. glycémie ou tension égale à zéro).
-3. **Évaluer et interpréter cliniquement les clusters obtenus** en les croisant a posteriori avec la prévalence réelle du diabète (`Outcome`).
-4. **Déployer une interface décisionnelle interactive** via Streamlit pour permettre aux praticiens de faire varier le nombre de groupes ($k$).
+The analysis is based on **Hierarchical Agglomerative Clustering (HAC)** with **Ward's linkage criterion**, making it possible to group the 768 patients together based on the similarity of their biological constants, without using the target variable (`Outcome`) during the training phase.
 
 ---
 
-## 🧠 Choix Méthodologiques et Techniques
+## 🎯 Objectives and Medical Context
 
-### 1. Pourquoi l'Apprentissage Non Supervisé (Clustering) ?
-L'objectif n'est pas de construire un simple prédicteur "malade / non malade", mais de découvrir la structure sous-jacente de la population. L'algorithme travaille en "aveugle" par rapport à la colonne `Outcome` pour isoler des profils biologiques réels.
+In diabetes management, two patients diagnosed as positive can present very different physiological realities (e.g., a young person with high insulin levels vs. an older person with high blood pressure and a high BMI).
 
-### 2. Pourquoi la CAH (Classification Ascendante Hiérarchique) ?
-* **Visualisation par Dendrogramme :** Contrairement à K-Means, la CAH produit un arbre hiérarchique qui montre exactement comment les patients et les groupes se regroupent étape par étape.
-* **Choix flexible du nombre de clusters :** Le nombre de groupes ($k$) peut être défini ou ajusté *a posteriori* par le Data Scientist ou le médecin en observant les hauteurs de fusion.
-* **Méthode Déterministe :** Elle garantit des résultats stables et reproductibles à chaque exécution (pas d'initialisation aléatoire).
+The strategic objectives of the project are:
+1. **Identify homogeneous sub-groups of patients** based solely on their clinical characteristics (`Glucose`, `BMI`, `Insulin`, `Age`, `BloodPressure`, etc.).
+2. **Clean and prepare medical data** by handling outlier values (e.g., blood glucose or blood pressure equal to zero).
+3. **Evaluate and clinically interpret the resulting clusters** by cross-referencing them *a posteriori* with the actual prevalence of diabetes (`Outcome`).
+4. **Deploy an interactive decision-making interface** via Streamlit to allow practitioners to vary the number of clusters ($k$).
 
-### 3. Pourquoi le Critère de Ward ?
-Le critère de Ward vise à **minimiser l'inertie intra-classe** (variance à l'intérieur de chaque groupe) et à **maximiser l'inertie inter-classes** (distance entre les groupes). Il permet d'obtenir des clusters très compacts, homogènes et équilibrés, ce qui est idéal pour la segmentation médicale.
+---
 
-### 4. Pourquoi la Standardisation Z-Score ?
-Les variables du dataset possèdent des échelles très différentes (l'Âge varie de 21 à 81 ans, le Glucose de 44 à 199 mg/dL, l'Insuline de 14 à 846 $\mu\text{U/mL}$). Sans standardisation, la variable avec les plus grandes valeurs dominerait artificiellement le calcul des distances euclidiennes. 
+## 🧠 Methodological and Technical Choices
+
+### 1. Why Unsupervised Learning (Clustering)?
+The goal is not to build a simple "sick / healthy" predictor, but to discover the underlying structure of the population. The algorithm works "blindly" with respect to the `Outcome` column to isolate real biological profiles.
+
+### 2. Why HAC (Hierarchical Agglomerative Clustering)?
+* **Dendrogram Visualization:** Unlike K-Means, HAC produces a hierarchical tree that shows exactly how patients and groups cluster step by step.
+* **Flexible Choice of Cluster Count:** The number of groups ($k$) can be defined or adjusted *a posteriori* by the Data Scientist or physician by observing the fusion heights.
+* **Deterministic Method:** It guarantees stable and reproducible results on every run (no random initialization).
+
+### 3. Why Ward's Criterion?
+Ward's criterion aims to **minimize intra-class inertia** (variance within each group) and **maximize inter-class inertia** (distance between groups). It produces very compact, homogeneous, and balanced clusters, which is ideal for medical segmentation.
+
+### 4. Why Z-Score Standardization?
+The variables in the dataset have very different scales (Age ranges from 21 to 81 years, Glucose from 44 to 199 mg/dL, Insulin from 14 to 846 $\mu\text{U/mL}$). Without standardization, the variable with the largest values would artificially dominate the Euclidean distance calculations. 
 
 $$\text{Z-score} = \frac{x - \mu}{\sigma}$$
 
 ---
 
-## 🔬 Pipeline de Traitement des Données
+## 🔬 Data Processing Pipeline
 
+### 1. Cleaning Aberrant Zeros
+In medical data, values equal to `0` for `Glucose`, `BloodPressure`, `SkinThickness`, `Insulin`, or `BMI` are biologically impossible. These values were identified as missing data and replaced by the **median** of their respective columns.
 
-### 1. Nettoyage des zéros aberrants
-Dans les données médicales, des valeurs égales à `0` pour le `Glucose`, la `BloodPressure`, le `SkinThickness`, l'`Insulin` ou le `BMI` sont biologiquement impossibles. Ces valeurs ont été identifiées comme des données manquantes et remplacées par la **médiane** de leurs colonnes respectives.
+### 2. Standardization and Linkage Matrix
+All physiological characteristics are normalized via `StandardScaler`. The linkage matrix is computed using Ward's method (`linkage(X_scaled, method='ward')`).
 
-### 2. Standardisation et Matrice de Liaison
-Toutes les caractéristiques physiologiques sont normalisées via `StandardScaler`. La matrice de liaison est calculée à l'aide de la méthode de Ward (`linkage(X_scaled, method='ward')`).
+### 3. Optimal $k$ Search & Silhouette Score
+The script automatically calculates the **Silhouette Score** for different cuts ($k \in [2, 5]$) to determine the number of clusters that best separates the data.
 
-### 3. Recherche du $k$ Optimal & Score de Silhouette
-Le script calcule automatiquement le **Score de Silhouette** pour différents découpages ($k \in [2, 5]$) afin de déterminer le nombre de clusters qui sépare le mieux les données.
-
-### 4. Visualisations et Diagnostics Générés
-* **Dendrogramme Tronqué :** Visualisation de la hiérarchie d'agrégation et du seuil de coupe.
-* **Projection ACP (2D) :** Analyse en Composantes Principales permettant de projeter les individus sur 2 axes pour visualiser la séparation spatiale des clusters.
-* **Profils Cliniques (Z-Scores) :** Graphique en barres montrant si un cluster est au-dessus ou en dessous de la moyenne pour chaque paramètre médical.
-* **Prévalence Réelle du Diabète (%) :** Pourcentage de cas positifs (`Outcome = 1`) contenus dans chaque cluster.
-
----
-
+### 4. Generated Visualizations and Diagnostics
+* **Truncated Dendrogram:** Visualization of the aggregation hierarchy and the cut-off threshold.
+* **PCA Projection (2D):** Principal Component Analysis making it possible to project individuals onto 2 axes to visualize the spatial separation of clusters.
+* **Clinical Profiles (Z-Scores):** Bar chart showing whether a cluster is above or below average for each medical parameter.
+* **Actual Diabetes Prevalence (%):** Percentage of positive cases (`Outcome = 1`) contained within each cluster.
 
 ---
 
-## 💡 Interprétations Avancées & Cliniques
+## 💡 Advanced & Clinical Interpretations
 
-### 1. Interprétation Biologique des Axes de l'ACP
-Sur le graphique 2D de l'ACP, la variance s'organise selon deux dimensions majeures :
-* **Axe 1 (PC1 - Horizontal) :** Représente l'**intensité métabolique globale** (synergie de l'âge, du glucose et de la pression artérielle). Plus un patient se décale vers la droite, plus son profil glycémique et cardiovasculaire est altéré.
-* **Axe 2 (PC2 - Vertical) :** Représente la **morphologie corporelle** (combinaison de l'IMC et de l'épaisseur de la peau). Il sépare les profils à forte surcharge pondérale des profils plus minces.
+### 1. Biological Interpretation of PCA Axes
+On the 2D PCA plot, variance is organized along two major dimensions:
+* **Axis 1 (PC1 - Horizontal):** Represents **global metabolic intensity** (synergy of age, glucose, and blood pressure). The further a patient shifts to the right, the more altered their glycemic and cardiovascular profile is.
+* **Axis 2 (PC2 - Vertical):** Represents **body morphology** (combination of BMI and skin thickness). It separates profiles with high overweight burden from leaner profiles.
 
-### 2. Validation de la Structure par le Score de Silhouette
-En l'absence de classes supervisées lors de l'apprentissage, le score de Silhouette valide la cohésion géométrique des groupes. Les pics de score obtenus pour $k=3$ ou $k=4$ confirment que la population se fragmente naturellement selon des frontières biologiques nettes.
+### 2. Validation of Structure via Silhouette Score
+In the absence of supervised classes during training, the Silhouette score validates the geometric cohesion of the groups. The score peaks obtained for $k=3$ or $k=4$ confirm that the population naturally fragments along clear biological boundaries.
 
-### 3. Dissociation : Risque Génétique vs Risque Acquis
-L'analyse de la variable `DiabetesPedigreeFunction` (facteur d'hérédité) combinée aux clusters révèle deux dynamiques distinctes :
-* Des groupes où le déséquilibre glycémique et l'IMC élevé s'expliquent principalement par des facteurs environnementaux et le mode de vie.
-* Des profils où la charge héréditaire est très forte, impactant des patients parfois plus jeunes mais présentant une prédisposition marquée.
+### 3. Dissociation: Genetic Risk vs. Acquired Risk
+The analysis of the `DiabetesPedigreeFunction` variable (heredity factor) combined with the clusters reveals two distinct dynamics:
+* Groups where glycemic imbalance and high BMI are explained mainly by environmental factors and lifestyle.
+* Profiles where the hereditary load is very strong, impacting sometimes younger patients but presenting a marked predisposition.
 
-### 4. Recommandations Cliniques et Stratification des Soins
 
-| Cluster Identifié | Profil Physiologique | Action Médicale Recommandée |
+### 4. Clinical Recommendations and Care Stratification
+
+| Identified Cluster | Physiological Profile | Recommended Medical Action |
 | :--- | :--- | :--- |
-| **Profil 1 : Sain / Jeune** | Constantes normales, IMC et glucose modérés | Suivi préventif de routine, conseils en hygiène de vie. |
-| **Profil 2 : Risque Métabolique** | Surcharge pondérale (IMC élevé), insuline forte, glucose limite | Programme personnalisé d'activité physique et suivi nutritionnel d'urgence pour freiner l'évolution vers le diabète. |
-| **Profil 3 : Diabète Avancé / Âger** | Glycémie très élevée, hypertension, âge avancé | Prise en charge pharmacologique renforcée, dépistage précoce des complications rénales et vasculaires. |
+| **Profile 1: Healthy / Young** | Normal constants, moderate BMI and glucose | Routine preventive follow-up, lifestyle advice. |
+| **Profile 2: Metabolic Risk** | Overweight (high BMI), high insulin, borderline glucose | Personalized physical activity program and emergency nutritional follow-up to curb the progression toward diabetes. |
+| **Profile 3: Advanced / Older Diabetes** | Very high blood glucose, hypertension, advanced age | Enhanced pharmacological management, early screening for renal and vascular complications. |
 
 ---
 
-## 🛠️ Choix des Bibliothèques et Stack Technique
+## 🛠️ Library Choices and Technical Stack
 
-| Bibliothèque | Usage principal | Justification technique |
+| Library | Main Usage | Technical Justification |
 | :--- | :--- | :--- |
-| **Python 3** | Langage principal | Standard incontournable pour la Data Science et la santé. |
-| **Pandas & NumPy** | Manipulation de données | Chargement du CSV, nettoyage des zéros et calculs matriciels. |
-| **SciPy (`cluster.hierarchy`)** | Algorithme CAH | Fonctions `linkage`, `dendrogram` et `fcluster` pour l'arbre hiérarchique. |
-| **Scikit-Learn** | Preprocessing & Métriques | `StandardScaler` pour la normalisation, `PCA` pour la réduction de dimension et `silhouette_score`. |
-| **Matplotlib & Seaborn** | Visualisation statique | Génération des graphiques et sauvegarde des rapports d'analyse. |
-| **Streamlit** | Interface Web | Déploiement d'une application interactive permettant de tester dynamiquement plusieurs valeurs de $k$. |
+| **Python 3** | Main language | Essential standard for Data Science and healthcare. |
+| **Pandas & NumPy** | Data manipulation | CSV loading, zero cleaning, and matrix calculations. |
+| **SciPy (`cluster.hierarchy`)** | HAC algorithm | `linkage`, `dendrogram`, and `fcluster` functions for the hierarchical tree. |
+| **Scikit-Learn** | Preprocessing & Metrics | `StandardScaler` for normalization, `PCA` for dimension reduction, and `silhouette_score`. |
+| **Matplotlib & Seaborn** | Static visualization | Generating charts and saving analysis reports. |
+| **Streamlit** | Web Interface | Deploying an interactive app allowing dynamic testing of multiple values of $k$. |
 
 ---
 
-## 🚀 Structure du Projet & Guide d'Exécution
+## 🚀 Project Structure & Execution Guide
 
-### Structure des dossiers
+### Folder Structure
 ```text
 ├── data/
-│   ├── pima_diabetes.csv             # Dataset médical initial (768 patients)
-│   └── pima_diabetes_segmented.csv   # Dataset final exporté avec la colonne 'Cluster'
-├── reports/                          # Graphiques sauvegardés automatiquement
+│   ├── pima_diabetes.csv             # Initial medical dataset (768 patients)
+│   └── pima_diabetes_segmented.csv   # Final dataset exported with the 'Cluster' column
+├── reports/                          # Automatically saved graphs
 │   ├── dashboard_complet.png
 │   ├── 1_dendrogramme.png
 │   ├── 2_projection_acp.png
 │   ├── 3_profils_clusters.png
 │   └── 4_repartition_diabete.png
-├── cah_diabete.py                    # Script d'analyse batch & génération de rapports
-├── app.py                            # Application Web interactive (Streamlit)
-└── README.md                         # Documentation du projet
+├── cah_diabete.py                    # Batch analysis script & report generation
+├── app.py                            # Interactive Web Application (Streamlit)
+└── README.md                         # Project documentation
 
 ```
 
-### pour lancer le projet
+### To Run the Project
 
-1. **Cloner le dépôt Git :**
+1. **Clone the Git repository:**
+
 ```bash
 git clone
 cd cah-diabete-segmentation
 
 ```
 
-2. **Exécuter le script d'analyse basique (génère les rapports et le CSV segmenté) :**
+2. **Run the basic analysis script (generates reports and segmented CSV):**
+
 ```bash
 python cah_diabete.py
 
 ```
 
-3. **Lancer le Dashboard Web Interactif Streamlit :**
+3. **Launch the Streamlit Interactive Web Dashboard:**
+
 ```bash
 streamlit run app.py
 
 ```
 
-
 ---
 
-## 📊 Synthèse des Profils Cliniques Obtenus
+## 📊 Summary of Obtained Clinical Profiles
 
-Grâce à la segmentation par CAH sur le dataset , les groupes formés mettent en évidence des profils types distincts :
+Thanks to the HAC segmentation on the dataset, the formed groups highlight distinct typical profiles:
 
-* **Cluster à Bas Risque (Profil Sain / Jeune) :** Moyenne d'âge plus basse, IMC modéré, glycémie et insuline normales. La prévalence du diabète y est minimale.
-* **Cluster à Risque Métabolique (Surpoids / Prédiabète) :** Patients caractérisés par un IMC très élevé et une insuline forte, nécessitant une prévention axée sur le poids.
-* **Cluster à Haut Risque (Diabète Sévère / Âgé) :** Patients plus âgés présentant une glycémie très élevée et une pression artérielle forte. La prévalence réelle du diabète y est la plus forte.
-
-```
-
-```
+* **Low-Risk Cluster (Healthy / Young Profile):** Lower average age, moderate BMI, and normal baseline glucose levels.
+* **Metabolic Risk Cluster:** High overweight burden (elevated BMI), high insulin resistance indicators, and borderline glycemic values.
+* **Advanced / Older Diabetes Cluster:** High blood pressure, significantly advanced age, and critical blood glucose levels requiring intensive care.

@@ -9,27 +9,27 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 
-# Configuration de la page Streamlit
-st.set_page_config(page_title="Dashboard CAH - Diabète", layout="wide")
+# Streamlit page configuration
+st.set_page_config(page_title="HAC Dashboard - Diabetes", layout="wide")
 sns.set_theme(style="whitegrid", palette="muted")
 
-st.title("🩸 Segmentation Intelligente des Patients Diabétiques (CAH)")
-st.markdown("Cette application interactive applique une **Classification Ascendante Hiérarchique (CAH)** sur le dataset médical *Pima Indians Diabetes*.")
+st.title("🩸 Intelligent Segmentation of Diabetic Patients (HAC)")
+st.markdown("This interactive application applies **Hierarchical Agglomerative Clustering (HAC)** to the *Pima Indians Diabetes* medical dataset.")
 
 # ============================================================================
-# CHARGEMENT ET PRÉTRAITEMENT
+# LOADING AND PREPROCESSING
 # ============================================================================
 @st.cache_data
 def load_data():
     data_path = "data/pima_diabetes.csv"
     columns = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 
-               'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome']
+        'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome']
     df = pd.read_csv(data_path, names=columns)
     
     features = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 
-                'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
+        'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
     
-    # Correction des zéros aberrants
+    # Correction of aberrant zeros
     zero_invalid = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']
     for col in zero_invalid:
         df[col] = df[col].replace(0, np.nan)
@@ -41,30 +41,30 @@ def load_data():
 
 df, X_scaled, features = load_data()
 
-# Barre latérale interactive
-st.sidebar.header("Paramètres du Modèle")
-selected_k = st.sidebar.slider("Nombre de clusters (k) :", min_value=2, max_value=5, value=4)
+# Interactive sidebar
+st.sidebar.header("Model Parameters")
+selected_k = st.sidebar.slider("Number of clusters (k):", min_value=2, max_value=5, value=4)
 
-# Exécution CAH
+# HAC execution
 Z = linkage(X_scaled, method='ward', metric='euclidean')
 df['Cluster'] = fcluster(Z, t=selected_k, criterion='maxclust')
 
 # ============================================================================
-# AFFICHAGE DES GRAPHIQUES
+# DISPLAY CHARTS
 # ============================================================================
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("1. Dendrogramme CAH")
+    st.subheader("1. HAC Dendrogram")
     fig1, ax1 = plt.subplots(figsize=(8, 5))
     dendrogram(Z, truncate_mode='lastp', p=20, color_threshold=Z[-selected_k+1, 2], above_threshold_color='gray', ax=ax1)
-    ax1.axhline(y=Z[-selected_k+1, 2], color='r', linestyle='--', label=f'Seuil (k={selected_k})')
-    ax1.set_ylabel("Inertie Inter-classe")
+    ax1.axhline(y=Z[-selected_k+1, 2], color='r', linestyle='--', label=f'Threshold (k={selected_k})')
+    ax1.set_ylabel("Inter-class Inertia")
     ax1.legend(loc='upper right')
     st.pyplot(fig1)
 
 with col2:
-    st.subheader("2. Projection ACP (2D)")
+    st.subheader("2. PCA Projection (2D)")
     pca = PCA(n_components=2)
     X_pca = pca.fit_transform(X_scaled)
     var_exp = pca.explained_variance_ratio_
@@ -78,7 +78,7 @@ with col2:
 col3, col4 = st.columns(2)
 
 with col3:
-    st.subheader("3. Profils Cliniques (Z-Scores)")
+    st.subheader("3. Clinical Profiles (Z-Scores)")
     df_scaled_df = pd.DataFrame(X_scaled, columns=features)
     df_scaled_df['Cluster'] = df['Cluster']
     df_melted_scaled = df_scaled_df.melt(id_vars=['Cluster'], value_vars=features)
@@ -91,13 +91,13 @@ with col3:
     st.pyplot(fig3)
 
 with col4:
-    st.subheader("4. Prévalence Réelle du Diabète (%)")
-    df_prop = df.groupby('Cluster')['Outcome'].value_counts(normalize=True).mul(100).rename('Pourcentage').reset_index()
+    st.subheader("4. Actual Diabetes Prevalence (%)")
+    df_prop = df.groupby('Cluster')['Outcome'].value_counts(normalize=True).mul(100).rename('Percentage').reset_index()
     
     fig4, ax4 = plt.subplots(figsize=(8, 5))
-    sns.barplot(data=df_prop, x='Cluster', y='Pourcentage', hue='Outcome', palette='Set2', ax=ax4)
+    sns.barplot(data=df_prop, x='Cluster', y='Percentage', hue='Outcome', palette='Set2', ax=ax4)
     ax4.set_ylim(0, 100)
-    ax4.legend(title='Outcome', labels=['Sain (0)', 'Diabétique (1)'])
+    ax4.legend(title='Outcome', labels=['Healthy (0)', 'Diabetic (1)'])
     st.pyplot(fig4)
 
-st.success(f"✅ Modèle exécuté avec succès pour {selected_k} clusters !")
+st.success(f"✅ Model successfully executed for {selected_k} clusters!")
