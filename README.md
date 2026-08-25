@@ -1,4 +1,5 @@
-﻿﻿# 🩸 Hierarchical Agglomerative Clustering (HAC) - Patient Segmentation (Pima Dataset)
+Markdown
+# 🩸 Hierarchical Agglomerative Clustering (HAC) - Patient Segmentation (Pima Dataset)
 
 This project applies unsupervised learning techniques (Clustering) to identify **typical patient profiles (phenotypes) who have or are at risk of Type 2 diabetes** using the real-world **Pima Indians Diabetes** dataset (`pima_diabetes.csv`).
 
