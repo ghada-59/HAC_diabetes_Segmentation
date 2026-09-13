@@ -1,16 +1,36 @@
-﻿# Fichiers cache Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Environnements virtuels (si vous en utilisez un)
-venv/
-env/
+*.so
+build/
+develop-eggs/
+dist/
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+PIPFILE.lock
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
 .env
-
-# Fichiers système (Mac/Windows)
+.venv
+env/
+venv/
+ENV/
 .DS_Store
-Thumbs.db
-
-# (Optionnel) Ignorer les données générées si elles sont trop lourdes
-# data/pima_diabetes-segmented.csv
+.idea/
+.vscode/
+*.swp
+*.swo
+outputs/
+reports/
+*.pkl
+*.joblib
+.ipynb_checkpoints/
