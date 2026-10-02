@@ -8,7 +8,7 @@ Provides multiple internal validation indices:
 """
 
 import numpy as np
-from typing import Dict, Tuple, List
+from typing import Dict, List
 from sklearn.metrics import (
     davies_bouldin_score,
     calinski_harabasz_score,
