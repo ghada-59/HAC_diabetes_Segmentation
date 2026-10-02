@@ -1,4 +1,5 @@
 ﻿import os
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,14 +11,17 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 
-# Automatically create the export directory
-os.makedirs("reports", exist_ok=True)
+# Resolve paths from the repository root so the script works from any working directory.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
+REPORTS_DIR = PROJECT_ROOT / "reports"
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 sns.set_theme(style="whitegrid", palette="muted")
 
 # ============================================================================
 # 1. LOADING AND CLEANING THE PIMA DATASET
 # ============================================================================
-data_path = os.path.join("data", "pima_diabetes.csv")
+data_path = DATA_DIR / "pima_diabetes.csv"
 columns = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 
         'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome']
 
@@ -108,19 +112,19 @@ axes[1, 1].legend(title='Outcome', labels=['Healthy (0)', 'Diabetic (1)'])
 plt.tight_layout()
 
 # Save individual and global images
-plt.savefig("reports/dashboard_complet.png", dpi=300)
+fig.savefig(REPORTS_DIR / "dashboard_complet.png", dpi=300)
 
 # Save individual figures for reports
 fig1, ax1 = plt.subplots(figsize=(8, 5))
 dendrogram(Z, truncate_mode='lastp', p=25, color_threshold=Z[-best_k+1, 2], above_threshold_color='gray', ax=ax1)
 ax1.set_title("CAH Dendrogram")
-fig1.savefig("reports/1_dendrogramme.png", dpi=300)
+fig1.savefig(REPORTS_DIR / "1_dendrogramme.png", dpi=300)
 plt.close(fig1)
 
 fig2, ax2 = plt.subplots(figsize=(8, 5))
 sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue=df['Cluster'], palette='Set1', style=df['Outcome'], ax=ax2)
 ax2.set_title("2D PCA Projection")
-fig2.savefig("reports/2_projection_acp.png", dpi=300)
+fig2.savefig(REPORTS_DIR / "2_projection_acp.png", dpi=300)
 plt.close(fig2)
 
 fig3, ax3 = plt.subplots(figsize=(9, 5))
@@ -128,22 +132,22 @@ sns.barplot(data=df_melted_scaled, x='variable', y='value', hue='Cluster', palet
 ax3.tick_params(axis='x', rotation=45, labelsize=9)
 plt.setp(ax3.get_xticklabels(), ha="right")
 ax3.set_title("Clinical Profiles by Cluster")
-fig3.savefig("reports/3_profils_clusters.png", dpi=300)
+fig3.savefig(REPORTS_DIR / "3_profils_clusters.png", dpi=300)
 plt.close(fig3)
 
 fig4, ax4 = plt.subplots(figsize=(7, 5))
 sns.barplot(data=df_prop, x='Cluster', y='Percentage', hue='Outcome', palette='Set2', ax=ax4)
 ax4.set_title("Diabetes Prevalence by Cluster (%)")
-fig4.savefig("reports/4_repartition_diabete.png", dpi=300)
+fig4.savefig(REPORTS_DIR / "4_repartition_diabete.png", dpi=300)
 plt.close(fig4)
 
-# Final display of the complete dashboard
-plt.show()
+# Close the main figure after export; this keeps the script suitable for non-interactive runs.
+plt.close(fig)
 
 # ============================================================================
 # 4. RESULTS EXPORT
 # ============================================================================
-df.to_csv("data/pima_diabetes_segmented.csv", index=False, sep=";")
+df.to_csv(DATA_DIR / "pima_diabetes_segmented.csv", index=False, sep=";")
 print("=" * 70)
 print(f"✅ SUCCESSFUL TEST! Ideal partition: {best_k} clusters.")
 print("✅ The 'reports/' directory has been updated with clear, readable plots.")
