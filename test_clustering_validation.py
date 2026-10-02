@@ -36,7 +36,8 @@ class TestClusteringValidation:
         X, y = synthetic_data
         
         # Random labels
-        random_labels = np.random.randint(0, 3, size=X.shape[0])
+        rng = np.random.default_rng(42)
+        random_labels = rng.integers(0, 3, size=X.shape[0])
         
         metrics = comprehensive_cluster_validation(X, random_labels, k=3)
         
