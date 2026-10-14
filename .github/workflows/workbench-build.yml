@@ -48,3 +48,4 @@ jobs:
       - run: pip install -r requirements-react-api.txt
       - run: python -m compileall -q api.py
       - run: python -c "from api import app; assert app.title == 'Data Cartography API'; print(app.title)"
+      - run: python -m pytest -q test_clustering_validation.py
